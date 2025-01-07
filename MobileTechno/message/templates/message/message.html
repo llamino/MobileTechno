@@ -1,0 +1,74 @@
+{% extends "base.html" %}
+
+{% block title %}پیام‌ها{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h2>پیام‌ها</h2>
+    <form method="post" id="sendMessageForm">
+        {% csrf_token %}
+        <div class="mb-3">
+            <label for="receiver" class="form-label">دریافت‌کننده</label>
+            <input type="text" class="form-control" id="receiver" name="receiver" required>
+        </div>
+        <div class="mb-3">
+            <label for="content" class="form-label">متن پیام</label>
+            <textarea class="form-control" id="content" name="content" rows="3" required></textarea>
+        </div>
+        <button type="submit" class="btn btn-primary">ارسال پیام</button>
+    </form>
+
+    <h3 class="mt-5">پیام‌های دریافتی</h3>
+    <ul class="list-group" id="messagesList">
+        <!-- پیام‌ها با استفاده از JavaScript بارگذاری می‌شوند -->
+    </ul>
+</div>
+
+<script>
+    const access_token = localStorage.getItem('access_token');
+
+    // بارگذاری پیام‌های دریافتی
+    async function loadMessages() {
+        const response = await fetch('/api/message/messages/', {
+            headers: {
+                'Authorization': `Bearer ${access_token}`,
+            },
+        });
+        const data = await response.json();
+        const messagesList = document.getElementById('messagesList');
+        messagesList.innerHTML = '';
+        data.results.forEach(message => {
+            const li = document.createElement('li');
+            li.className = 'list-group-item';
+            li.innerHTML = `<strong>${message.sender}</strong>: ${message.content}<br><small>${message.timestamp}</small>`;
+            messagesList.appendChild(li);
+        });
+    }
+
+    loadMessages();
+
+    // ارسال پیام
+    document.getElementById('sendMessageForm').addEventListener('submit', async function(e) {
+        e.preventDefault();
+        const receiver = document.getElementById('receiver').value;
+        const content = document.getElementById('content').value;
+
+        const response = await fetch('/api/message/messages/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${access_token}`,
+            },
+            body: JSON.stringify({ receiver, content }),
+        });
+
+        const data = await response.json();
+        if (response.ok) {
+            alert('پیام با موفقیت ارسال شد.');
+            loadMessages();
+        } else {
+            alert('ارسال پیام ناموفق بود: ' + JSON.stringify(data));
+        }
+    });
+</script>
+{% endblock %}
