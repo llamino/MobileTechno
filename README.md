@@ -1,45 +1,84 @@
-معرفی پروژه
-این پروژه یک سیستم مدیریت حساب کاربری مبتنی بر Django است که شامل ویژگی‌های زیر می‌باشد:
+# Django User Management with Email Verification and JWT Authentication
 
-ثبت‌نام کاربران با تاییدیه ایمیل: کاربران پس از ثبت‌نام باید ایمیل خود را تایید کنند تا حساب کاربری فعال شود.
-ورود و خروج از سیستم: امکان ورود و خروج امن با استفاده از فرم‌های سفارشی.
-مدیریت پروفایل کاربری: کاربران می‌توانند اطلاعات پروفایل خود را مشاهده و ویرایش کنند.
-تغییر رمز عبور: کاربران می‌توانند رمز عبور خود را تغییر دهند.
-احراز هویت با JWT: استفاده از توکن‌های JWT برای احراز هویت در API‌ها.
-API‌های RESTful: ارائه API برای ثبت‌نام و ورود کاربران با استفاده از Django REST Framework.
-ویژگی‌ها
-ثبت‌نام با تایید ایمیل: کاربران پس از ثبت‌نام باید ایمیلی حاوی لینک فعال‌سازی دریافت کنند.
-ورود امن: استفاده از JWT برای احراز هویت امن کاربران.
-مدیریت پروفایل: کاربران می‌توانند اطلاعات شخصی خود مانند نام، نام خانوادگی و عکس پروفایل را مدیریت کنند.
-تغییر رمز عبور: امکان تغییر رمز عبور با حفظ نشست کاربری.
-سفارشی‌سازی فرم‌ها: فرم‌های ثبت‌نام و ورود با طراحی سفارشی.
-پیش‌نیازها
-قبل از شروع به کار با پروژه، اطمینان حاصل کنید که موارد زیر را بر روی سیستم خود نصب کرده‌اید:
+## Overview
 
-Python 3.8 یا بالاتر
-Django 4.x
-Django REST Framework
-Django REST Framework SimpleJWT
-پایگاه داده (مانند SQLite، PostgreSQL، MySQL)
-SMTP سرور برای ارسال ایمیل
-نصب و راه‌اندازی پروژه
-۱. کلون کردن مخزن
-ابتدا مخزن پروژه را از گیت‌هاب کلون کنید:
+This Django project provides a comprehensive user management system with the following features:
 
-bash
-Copy code
+- **User Registration with Email Verification:** Users must verify their email to activate their accounts.
+- **Authentication using JWT:** Secure authentication using JSON Web Tokens (JWT) for API access.
+- **Profile Management:** Users can view and edit their profiles, including uploading a profile picture.
+- **Password Management:** Users can change their passwords securely.
+- **RESTful API Endpoints:** API endpoints for registration, login, and token refresh using Django REST Framework.
+
+## Features
+
+- **Email Confirmation:** Ensures the authenticity of user emails by sending a verification link upon registration.
+- **JWT Authentication:** Provides secure access to protected API endpoints.
+- **Custom User Model:** Extends Django's default user model to include additional fields.
+- **Profile Management:** Allows users to manage their personal information and profile picture.
+- **Secure Password Handling:** Implements password hashing and secure password change mechanisms.
+- **Responsive Templates:** User-friendly interfaces for registration, login, profile viewing/editing, and password management.
+
+## Technologies Used
+
+- **Django 4.x**
+- **Django REST Framework**
+- **Django REST Framework SimpleJWT**
+- **SQLite/PostgreSQL/MySQL**
+- **Bootstrap (optional for styling)**
+
+## Installation
+
+### 1. Clone the Repository
+
+```bash
 git clone https://github.com/yourusername/yourproject.git
 cd yourproject
-۲. ایجاد و فعال‌سازی محیط مجازی
-برای مدیریت وابستگی‌ها، یک محیط مجازی ایجاد کنید:
 
+
+
+Thought for a couple of seconds
+markdown
+Copy code
+# Django User Management with Email Verification and JWT Authentication
+
+## Overview
+
+This Django project provides a comprehensive user management system with the following features:
+
+- **User Registration with Email Verification:** Users must verify their email to activate their accounts.
+- **Authentication using JWT:** Secure authentication using JSON Web Tokens (JWT) for API access.
+- **Profile Management:** Users can view and edit their profiles, including uploading a profile picture.
+- **Password Management:** Users can change their passwords securely.
+- **RESTful API Endpoints:** API endpoints for registration, login, and token refresh using Django REST Framework.
+
+## Features
+
+- **Email Confirmation:** Ensures the authenticity of user emails by sending a verification link upon registration.
+- **JWT Authentication:** Provides secure access to protected API endpoints.
+- **Custom User Model:** Extends Django's default user model to include additional fields.
+- **Profile Management:** Allows users to manage their personal information and profile picture.
+- **Secure Password Handling:** Implements password hashing and secure password change mechanisms.
+- **Responsive Templates:** User-friendly interfaces for registration, login, profile viewing/editing, and password management.
+
+## Technologies Used
+
+- **Django 4.x**
+- **Django REST Framework**
+- **Django REST Framework SimpleJWT**
+- **SQLite/PostgreSQL/MySQL**
+- **Bootstrap (optional for styling)**
+
+## Installation
+
+### 1. Clone the Repository
+
+git clone https://github.com/yourusername/yourproject.git
+cd yourproject
+2. Create and Activate a Virtual Environment
 bash
 Copy code
 python -m venv venv
-source venv/bin/activate  # در ویندوز: venv\Scripts\activate
-۳. نصب وابستگی‌ها
-تمامی وابستگی‌های مورد نیاز را با استفاده از pip نصب کنید:
-
-bash
-Copy code
+source venv/bin/activate  # On Windows: venv\Scripts\activate
+## 3. Install Dependencies
 pip install -r requirements.txt
