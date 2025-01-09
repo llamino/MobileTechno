@@ -7,6 +7,8 @@ from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import filters
 from rest_framework.response import Response
 from rest_framework.decorators import action
+from rest_framework import status
+from rest_framework.permissions import IsAuthenticatedOrReadOnly
 import requests
 from bs4 import BeautifulSoup
 
@@ -15,7 +17,7 @@ from accounts.models import UserRequest  # فرض بر وجود مدل UserReque
 class MobileViewSet(viewsets.ModelViewSet):
     queryset = Mobile.objects.all()
     serializer_class = MobileSerializer
-    permission_classes = [permissions.IsAuthenticatedOrReadOnly]
+    permission_classes = [IsAuthenticatedOrReadOnly]
     filter_backends = [DjangoFilterBackend, filters.OrderingFilter]
     filterset_fields = ['price']
     ordering_fields = ['price', 'created_at']

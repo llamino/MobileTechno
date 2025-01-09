@@ -56,6 +56,9 @@ MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
+
+    'accounts.middleware.JWTAuthenticationMiddleware',  # Custom JWT Authentication Middleware
+
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
@@ -113,6 +116,8 @@ SIMPLE_JWT = {
     'ALGORITHM': 'HS256',
     'SIGNING_KEY': 'your_secret_key',
     'AUTH_HEADER_TYPES': ('Bearer',),
+    # 'USER_ID_FIELD': 'id',
+    # 'USER_ID_CLAIM': 'user_id',
 }
 DATABASES = {
     'default': {
@@ -169,7 +174,9 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 AUTH_USER_MODEL = 'accounts.User'
 
+# Backend سفارشی
 AUTHENTICATION_BACKENDS = [
-    'accounts.backends.CustomAuthenticationBackend',  # اشاره به فایل backends.py
-    'django.contrib.auth.backends.ModelBackend',   # بک‌اند پیش‌فرض جنگو
+    'accounts.backends.UsernameOrPhoneBackend',
+    'django.contrib.auth.backends.ModelBackend',
 ]
+

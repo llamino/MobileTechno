@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+{% load static %}
+{% block title %}پروفایل{% endblock %}
+{% block content %}
+<div class="row">
+    <div class="col-md-4 text-center">
+        {% if user.profile.photo %}
+            <img src="{{ user.profile.photo.url }}" alt="Profile Photo" class="img-thumbnail mb-3" style="width: 200px; height: 200px; object-fit: cover;">
+        {% else %}
+            <img src="{% static 'images/default_profile.png' %}" alt="Default Profile Photo" class="img-thumbnail mb-3" style="width: 200px; height: 200px; object-fit: cover;">
+        {% endif %}
+    </div>
+    <div class="col-md-8">
+        <h2>پروفایل من</h2>
+        <table class="table table-striped">
+            <tr>
+                <th>نام کاربری:</th>
+                <td>{{ user.username }}</td>
+            </tr>
+            <tr>
+                <th>شماره تلفن:</th>
+                <td>{{ user.phone_number }}</td>
+            </tr>
+            <tr>
+                <th>ایمیل:</th>
+                <td>{{ user.email }}</td>
+            </tr>
+            <tr>
+                <th>نام:</th>
+                <td>{{ user.profile.first_name }}</td>
+            </tr>
+            <tr>
+                <th>نام خانوادگی:</th>
+                <td>{{ user.profile.last_name }}</td>
+            </tr>
+        </table>
+        <a href="{% url 'accounts:edit_profile' %}" class="btn btn-primary">ویرایش پروفایل</a>
+        <a href="{% url 'accounts:change_password' %}" class="btn btn-warning">تغییر رمز عبور</a>
+    </div>
+</div>
+{% endblock %}

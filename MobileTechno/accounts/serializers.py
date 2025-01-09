@@ -1,94 +1,105 @@
+# accounts/serializers.py
 from rest_framework import serializers
 from .models import User, Profile
-from django.core.files.storage import default_storage
-from django.contrib.auth.password_validation import validate_password
+from django.contrib.auth import authenticate
+from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
+from django.contrib.auth import get_user_model
 
+User = get_user_model()
 
 class ProfileSerializer(serializers.ModelSerializer):
     class Meta:
         model = Profile
-        fields = ['id', 'first_name', 'last_name', 'image', 'bio']
-        read_only_fields = ('id',)
-
-    def validate_image(self, value):
-        if not hasattr(value, 'file'):
-            raise serializers.ValidationError("Invalid file format.")
-        return value
+        fields = ['first_name', 'last_name', 'photo']
 
 
-class RegisterSerializer(serializers.ModelSerializer):
-    confirm_password = serializers.CharField(write_only=True, required=True)
-
-    class Meta:
-        model = User
-        fields = ['email', 'password', 'confirm_password', 'phone_number']
-        extra_kwargs = {
-            'password': {'write_only': True},
-            'email': {'required': True},
-            'phone_number': {'required': True},
-        }
-
-    def validate(self, data):
-        """Ensure password and confirm_password match."""
-        if data['password'] != data['confirm_password']:
-            raise serializers.ValidationError({"confirm_password": "Passwords do not match."})
-        return data
-
-    def validate_email(self, value):
-        """Ensure email uniqueness and validity."""
-        if User.objects.filter(email=value).exists():
-            raise serializers.ValidationError("A user with this email already exists.")
-        return value
-
-    def validate_phone_number(self, value):
-        """Validate phone number format (e.g., must be numeric and 11 digits)."""
-        if not value.isdigit() or len(value) != 11:
-            raise serializers.ValidationError("Phone number must be 11 digits long.")
-        return value
-
-    def create(self, validated_data):
-        # Remove confirm_password from validated_data
-        validated_data.pop('confirm_password')
-        password = validated_data.pop('password')
-        user = User(**validated_data)
-        user.set_password(password)
-        user.save()
-        return user
-
-
-
-
-class ChangePasswordSerializer(serializers.Serializer):
-    old_password = serializers.CharField(required=True)
-    new_password = serializers.CharField(required=True, validators=[validate_password])
-
-class LoginSerializer(serializers.Serializer):
-    email = serializers.EmailField(required=True)
-    password = serializers.CharField(required=True)
-
-class UserProfileSerializer(serializers.ModelSerializer):
+class UserSerializer(serializers.ModelSerializer):
     profile = ProfileSerializer()
 
     class Meta:
         model = User
-        fields = ['id', 'email', 'phone_number', 'is_active', 'profile', 'create_date', 'update_date']
-        read_only_fields = ['is_active', 'create_date', 'update_date', 'email']
+        fields = ['id', 'username', 'phone_number', 'profile']
 
-    def update(self, instance, validated_data):
-        # استخراج داده‌های پروفایل
-        profile_data = validated_data.pop('profile', None)
-        print(f'amin ahmad : {profile_data}')
-        # به‌روزرسانی مدل User
-        for attr, value in validated_data.items():
-            setattr(instance, attr, value)
-        instance.save()
 
-        # به‌روزرسانی مدل Profile
-        if profile_data:
-            profile, created = Profile.objects.get_or_create(user=instance)
-            for attr, value in profile_data.items():
-                if value is not None:
-                    setattr(profile, attr, value)
-            profile.save()
+class RegisterSerializer(serializers.ModelSerializer):
+    profile = ProfileSerializer()
 
-        return instance
+    class Meta:
+        model = User
+        fields = ['username', 'phone_number', 'password', 'profile', 'email']
+        extra_kwargs = {'password': {'write_only': True}, 'email': {'required': False, 'allow_blank': True}}
+
+    def create(self, validated_data):
+        profile_data = validated_data.pop('profile')
+        password = validated_data.pop('password')
+        email = validated_data.get('email', None)
+        user = User.objects.create_user(
+            username=validated_data['username'],
+            phone_number=validated_data['phone_number'],
+            password=password,
+            email=email
+        )
+        Profile.objects.update_or_create(user=user, **profile_data)
+        return user
+
+
+class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
+
+    username_or_phone = serializers.CharField(write_only=True)
+    password = serializers.CharField(write_only=True)
+
+    def __init__(self, *args, **kwargs):
+        super(CustomTokenObtainPairSerializer, self).__init__(*args, **kwargs)
+        # حذف فیلد 'username'
+        self.fields.pop('username', None)
+        # افزودن فیلد 'username_or_phone'
+        self.fields['username_or_phone'] = serializers.CharField()
+
+    def validate(self, attrs):
+
+        username_or_phone = attrs.get('username_or_phone')
+        password = attrs.get('password')
+
+        user = None
+
+        # تلاش برای یافتن کاربر با نام کاربری
+        try:
+            user = User.objects.get(username=username_or_phone)
+        except User.DoesNotExist:
+            pass
+
+        # اگر کاربر پیدا نشد، تلاش برای یافتن با شماره تلفن
+        if user is None:
+            try:
+                user = User.objects.get(phone_number=username_or_phone)
+            except User.DoesNotExist:
+                raise serializers.ValidationError("نام کاربری یا شماره تلفن و رمز عبور نامعتبر است.")
+
+        # بررسی رمز عبور و فعال بودن کاربر
+        if user and user.check_password(password):
+            if not user.is_active:
+                raise serializers.ValidationError("این حساب کاربری غیرفعال است.")
+
+            refresh = self.get_token(user)
+
+            data = {
+                'refresh': str(refresh),
+                'access': str(refresh.access_token),
+                'user': {
+                    'id': user.id,
+                    'username': user.username,
+                    'phone_number': user.phone_number,
+                    'email': user.email,
+                }
+            }
+
+            return data
+        else:
+            raise serializers.ValidationError("نام کاربری یا شماره تلفن و رمز عبور نامعتبر است.")
+
+
+
+
+
+
+

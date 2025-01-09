@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% load static %}
+{% block title %}ویرایش پروفایل{% endblock %}
+{% block content %}
+<div class="container">
+    <h2>ویرایش پروفایل</h2>
+    <form method="POST" enctype="multipart/form-data">
+        {% csrf_token %}
+        <div class="row">
+            <div class="col-md-6">
+                <h4>اطلاعات کاربری</h4>
+                {{ user_form.as_p }}
+            </div>
+            <div class="col-md-6">
+                <h4>اطلاعات پروفایل</h4>
+                {{ profile_form.as_p }}
+            </div>
+        </div>
+        <button type="submit" class="btn btn-success">ذخیره تغییرات</button>
+        <a href="{% url 'accounts:profile' %}" class="btn btn-secondary">بازگشت</a>
+    </form>
+</div>
+{% endblock %}

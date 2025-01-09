@@ -1,14 +1,22 @@
-from django.urls import path
+# accounts/urls.py
 
+from django.urls import path
 from . import views
+from rest_framework_simplejwt.views import TokenRefreshView
+
+app_name = 'accounts'
 
 urlpatterns = [
-    path('profile/', views.UserProfileView.as_view(), name='profile'),
-    path('edit_profile/', views.UserProfileView.as_view(), name='edit_profile'),
-    path('delete_profile/', views.UserProfileView.as_view(), name='delete_profile'),
+    # صفحات وب
     path('register/', views.RegisterView.as_view(), name='register'),
-    path('login/', views.LoginView.as_view(), name='login'),
-    path('logout/', views.LogoutView.as_view(), name='logout'),
-    path('refresh/', views.RefreshAccessTokenView.as_view(), name='refresh'),
-    path('validate_jwt/', views.ValidateJWTView.as_view(), name='validate_jwt'),
+    path('login/', views.CustomLoginView.as_view(), name='login'),
+    path('logout/', views.CustomLogoutView.as_view(), name='logout'),
+    path('change-password/', views.ChangePasswordView.as_view(), name='change_password'),
+    path('profile/', views.ProfileView.as_view(), name='profile'),
+    path('profile/edit/', views.EditProfileView.as_view(), name='edit_profile'),
+
+    # API URLs
+    path('api/register/', views.RegisterAPIView.as_view(), name='api_register'),
+    path('api/login/', views.CustomTokenObtainPairView.as_view(), name='api_login'),
+    path('api/token/refresh/', TokenRefreshView.as_view(), name='api_token_refresh'),
 ]

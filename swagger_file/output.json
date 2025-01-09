@@ -1,0 +1,319 @@
+swagger: '2.0'
+info:
+  title: Your API Title
+  description: API description
+  version: v1
+host: 127.0.0.1:8000
+schemes:
+- http
+basePath: /
+consumes:
+- application/json
+produces:
+- application/json
+securityDefinitions:
+  Basic:
+    type: basic
+security:
+- Basic: []
+paths:
+  /accounts/api/login/:
+    post:
+      operationId: accounts_api_login_create
+      description: ''
+      parameters:
+      - name: data
+        in: body
+        required: true
+        schema:
+          $ref: '#/definitions/CustomTokenObtainPair'
+      responses:
+        '201':
+          description: ''
+          schema:
+            $ref: '#/definitions/CustomTokenObtainPair'
+      tags:
+      - accounts
+    parameters: []
+  /accounts/api/register/:
+    post:
+      operationId: accounts_api_register_create
+      description: ''
+      parameters:
+      - name: data
+        in: body
+        required: true
+        schema:
+          $ref: '#/definitions/Register'
+      responses:
+        '201':
+          description: ''
+          schema:
+            $ref: '#/definitions/Register'
+      tags:
+      - accounts
+    parameters: []
+  /accounts/api/token/refresh/:
+    post:
+      operationId: accounts_api_token_refresh_create
+      description: |-
+        Takes a refresh type JSON web token and returns an access type JSON web
+        token if the refresh token is valid.
+      parameters:
+      - name: data
+        in: body
+        required: true
+        schema:
+          $ref: '#/definitions/TokenRefresh'
+      responses:
+        '201':
+          description: ''
+          schema:
+            $ref: '#/definitions/TokenRefresh'
+      tags:
+      - accounts
+    parameters: []
+  /messages/messages/:
+    get:
+      operationId: messages_messages_list
+      description: نمایش لیست پیام‌ها و ارسال پیام جدید.
+      parameters:
+      - name: page
+        in: query
+        description: A page number within the paginated result set.
+        required: false
+        type: integer
+      - name: page_size
+        in: query
+        description: Number of results to return per page.
+        required: false
+        type: integer
+      responses:
+        '200':
+          description: ''
+          schema:
+            required:
+            - count
+            - results
+            type: object
+            properties:
+              count:
+                type: integer
+              next:
+                type: string
+                format: uri
+                x-nullable: true
+              previous:
+                type: string
+                format: uri
+                x-nullable: true
+              results:
+                type: array
+                items:
+                  $ref: '#/definitions/Message'
+      tags:
+      - messages
+    post:
+      operationId: messages_messages_create
+      description: نمایش لیست پیام‌ها و ارسال پیام جدید.
+      parameters:
+      - name: data
+        in: body
+        required: true
+        schema:
+          $ref: '#/definitions/Message'
+      responses:
+        '201':
+          description: ''
+          schema:
+            $ref: '#/definitions/Message'
+      tags:
+      - messages
+    parameters: []
+  /messages/messages/user/{username}/:
+    get:
+      operationId: messages_messages_user_read
+      description: نمایش پیام‌های ارسال شده و دریافت شده با یک کاربر مشخص.
+      parameters:
+      - name: page
+        in: query
+        description: A page number within the paginated result set.
+        required: false
+        type: integer
+      - name: page_size
+        in: query
+        description: Number of results to return per page.
+        required: false
+        type: integer
+      responses:
+        '200':
+          description: ''
+          schema:
+            required:
+            - count
+            - results
+            type: object
+            properties:
+              count:
+                type: integer
+              next:
+                type: string
+                format: uri
+                x-nullable: true
+              previous:
+                type: string
+                format: uri
+                x-nullable: true
+              results:
+                type: array
+                items:
+                  $ref: '#/definitions/Message'
+      tags:
+      - messages
+    parameters:
+    - name: username
+      in: path
+      required: true
+      type: string
+  /messages/messages/{id}/:
+    get:
+      operationId: messages_messages_read
+      description: مشاهده جزئیات یک پیام خاص.
+      parameters: []
+      responses:
+        '200':
+          description: ''
+          schema:
+            $ref: '#/definitions/Message'
+      tags:
+      - messages
+    parameters:
+    - name: id
+      in: path
+      description: A unique integer value identifying this message.
+      required: true
+      type: integer
+definitions:
+  CustomTokenObtainPair:
+    required:
+    - username_or_phone
+    - password
+    type: object
+    properties:
+      username_or_phone:
+        title: Username or phone
+        type: string
+        minLength: 1
+      password:
+        title: Password
+        type: string
+        minLength: 1
+  Profile:
+    required:
+    - first_name
+    - last_name
+    type: object
+    properties:
+      first_name:
+        title: First name
+        type: string
+        maxLength: 30
+        minLength: 1
+      last_name:
+        title: Last name
+        type: string
+        maxLength: 30
+        minLength: 1
+      photo:
+        title: Photo
+        type: string
+        readOnly: true
+        x-nullable: true
+        format: uri
+  Register:
+    required:
+    - username
+    - phone_number
+    - password
+    - profile
+    type: object
+    properties:
+      username:
+        title: Username
+        type: string
+        maxLength: 150
+        minLength: 1
+      phone_number:
+        title: Phone number
+        type: string
+        maxLength: 20
+        minLength: 1
+      password:
+        title: Password
+        type: string
+        maxLength: 128
+        minLength: 1
+      profile:
+        $ref: '#/definitions/Profile'
+      email:
+        title: Email
+        type: string
+        format: email
+        maxLength: 254
+        x-nullable: true
+  TokenRefresh:
+    required:
+    - refresh
+    type: object
+    properties:
+      refresh:
+        title: Refresh
+        type: string
+        minLength: 1
+      access:
+        title: Access
+        type: string
+        readOnly: true
+        minLength: 1
+  User:
+    required:
+    - username
+    type: object
+    properties:
+      id:
+        title: ID
+        type: integer
+        readOnly: true
+      username:
+        title: Username
+        type: string
+        maxLength: 150
+        minLength: 1
+  Message:
+    required:
+    - recipient
+    - content
+    type: object
+    properties:
+      id:
+        title: ID
+        type: integer
+        readOnly: true
+      sender:
+        $ref: '#/definitions/User'
+      recipient:
+        title: Recipient
+        type: string
+      content:
+        title: Content
+        type: string
+        minLength: 1
+      timestamp:
+        title: Timestamp
+        type: string
+        format: date-time
+        readOnly: true
+      is_read:
+        title: Is read
+        type: boolean
+        readOnly: true
