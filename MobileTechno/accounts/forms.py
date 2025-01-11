@@ -1,5 +1,4 @@
 # accounts/forms.py
-
 from django import forms
 from django.contrib.auth import get_user_model
 from .models import Profile
@@ -8,15 +7,12 @@ from django.contrib.auth.forms import AuthenticationForm, PasswordChangeForm
 User = get_user_model()
 
 class RegisterForm(forms.ModelForm):
-    first_name = forms.CharField(max_length=30, required=False, label="نام")
-    last_name = forms.CharField(max_length=30, required=False, label="نام خانوادگی")
-    photo = forms.ImageField(required=False, label="عکس پروفایل")
     password = forms.CharField(widget=forms.PasswordInput, label="رمز عبور")
     password_confirm = forms.CharField(widget=forms.PasswordInput, label="تایید رمز عبور")
 
     class Meta:
         model = User
-        fields = ['username', 'phone_number', 'email', 'password']
+        fields = ['username', 'email', 'password']
 
     def clean_password_confirm(self):
         password = self.cleaned_data.get('password')
@@ -33,23 +29,21 @@ class RegisterForm(forms.ModelForm):
             # استفاده از get_or_create به جای create
             profile, created = Profile.objects.get_or_create(
                 user=user,
-                defaults={
-                    'first_name': self.cleaned_data['first_name'],
-                    'last_name': self.cleaned_data['last_name'],
-                    'photo': self.cleaned_data.get('photo')
-                }
-            )
+                first_name= self.cleaned_data.get('first_name', ''),
+                last_name= self.cleaned_data.get('last_name', ''),
+                photo=self.cleaned_data.get('photo'))
+
             if not created:
-                # اگر پروفایل قبلاً وجود داشته باشد، آن را به‌روزرسانی کنید
-                profile.first_name = self.cleaned_data['first_name']
-                profile.last_name = self.cleaned_data['last_name']
+                # به‌روزرسانی پروفایل موجود
+                profile.first_name = self.cleaned_data.get('first_name', profile.first_name)
+                profile.last_name = self.cleaned_data.get('last_name', profile.last_name)
                 if self.cleaned_data.get('photo'):
-                    profile.photo = self.cleaned_data.get('photo')
+                    profile.photo = self.cleaned_data['photo']
                 profile.save()
         return user
 
 class LoginForm(AuthenticationForm):
-    username = forms.CharField(label="نام کاربری یا شماره تلفن", max_length=150)
+    username = forms.CharField(label="نام کاربری یا ایمیل", max_length=150)
 
 class CustomPasswordChangeForm(PasswordChangeForm):
     old_password = forms.CharField(label="رمز عبور فعلی", widget=forms.PasswordInput(attrs={'class': 'form-control'}))
@@ -62,7 +56,7 @@ class UserUpdateForm(forms.ModelForm):
     """
     class Meta:
         model = User
-        fields = ['username', 'email', 'phone_number']
+        fields = ['username', 'email']
 
 class ProfileUpdateForm(forms.ModelForm):
     """
@@ -71,8 +65,7 @@ class ProfileUpdateForm(forms.ModelForm):
     first_name = forms.CharField(max_length=30, required=False, label="نام")
     last_name = forms.CharField(max_length=30, required=False, label="نام خانوادگی")
     photo = forms.ImageField(required=False, label="عکس پروفایل")
+
     class Meta:
         model = Profile
         fields = ['first_name', 'last_name', 'photo']
-
-

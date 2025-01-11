@@ -12,7 +12,7 @@ https://docs.djangoproject.com/en/5.1/ref/settings/
 import os
 from datetime import timedelta
 from pathlib import Path
-
+from decouple import config
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -21,7 +21,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/5.1/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-vl4&b2)i8+5=yl(kp&-#08vn%y6j@)9$)vz02_9nd5zf4)zrze'
+SECRET_KEY = config('SECRET_KEY')
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
@@ -29,6 +29,19 @@ DEBUG = True
 ALLOWED_HOSTS = []
 
 
+SWAGGER_SETTINGS = {
+    'SECURITY_DEFINITIONS': {
+        'Bearer': {
+            'type': 'apiKey',
+            'name': 'Authorization',
+            'in': 'header',
+            'description': "لطفاً توکن JWT خود را با پیشوند `Bearer ` وارد کنید."
+        }
+    },
+    'USE_SESSION_AUTH': False,
+    'JSON_EDITOR': True,
+    'DEFAULT_INFO': 'path.to.your.schema_view',  # اطمینان حاصل کنید که این مسیر درست باشد
+}
 # Application definition
 
 INSTALLED_APPS = [
@@ -38,18 +51,16 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-
-    'api',
-        # اپلیکیشن‌های شخصی
+     # Apps
     'accounts',
     'home',
     'mobile',
     'message',
-
-    # بسته‌های جانبی
+    # side packs
     'rest_framework',
     'django_filters',
-    'django_render_partial'
+    'django_render_partial',
+    'drf_yasg'
 ]
 
 MIDDLEWARE = [
@@ -98,19 +109,15 @@ REST_FRAMEWORK = {
         'rest_framework.permissions.AllowAny',
     ],
     'DEFAULT_FILTER_BACKENDS': ['django_filters.rest_framework.DjangoFilterBackend'],
-    'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
-    'PAGE_SIZE': 10,
+
     # 'DEFAULT_SCHEMA_CLASS': 'rest_framework.schemas.coreapi.AutoSchema',
-    #   'DEFAULT_RENDERER_CLASSES': (
-    #     'rest_framework.renderers.JSONRenderer',
-    #     # سایر رندررهای مورد نیاز شما
-    # ),
+    # 'DEFAULT_SCHEMA_CLASS': 'drf_yasg.openapi.AutoSchema',
 }
 
 
 SIMPLE_JWT = {
-    'ACCESS_TOKEN_LIFETIME': timedelta(hours=10),
-    'REFRESH_TOKEN_LIFETIME': timedelta(days=7),
+    'ACCESS_TOKEN_LIFETIME': timedelta(hours=1),
+    'REFRESH_TOKEN_LIFETIME': timedelta(days=1),
     'ROTATE_REFRESH_TOKENS': False,
     'BLACKLIST_AFTER_ROTATION': True,
     'ALGORITHM': 'HS256',
@@ -123,10 +130,10 @@ DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
         'NAME': 'MobileTechno',  # نام دیتابیس
-        'USER': 'root',  # نام کاربری MySQL
-        'PASSWORD': 'Am13810420',  # رمز عبور MySQL
-        'HOST': '127.0.0.1',  # اگر از سرور ریموت استفاده می‌کنید، آدرس سرور را قرار دهید
-        'PORT': '3306',  # پورت MySQL (به طور پیش‌فرض 3306)
+        'USER': config('USER'),  # نام کاربری MySQL
+        'PASSWORD': config('PASSWORD'),  # رمز عبور MySQL
+        'HOST': config('HOST'),  # اگر از سرور ریموت استفاده می‌کنید، آدرس سرور را قرار دهید
+        'PORT': config('PORT'),  # پورت MySQL (به طور پیش‌فرض 3306)
     }
 }
 # Password validation
@@ -175,8 +182,11 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 AUTH_USER_MODEL = 'accounts.User'
 
 # Backend سفارشی
+
 AUTHENTICATION_BACKENDS = [
-    'accounts.backends.UsernameOrPhoneBackend',
-    'django.contrib.auth.backends.ModelBackend',
+    'accounts.backends.UsernameOrEmailBackend',
+    'django.contrib.auth.backends.ModelBackend',  # بک‌اند پیش‌فرض Django
 ]
+
+
 

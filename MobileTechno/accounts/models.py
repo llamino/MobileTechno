@@ -1,5 +1,3 @@
-# accounts/models.py
-
 from django.db import models
 from django.contrib.auth.models import (
     AbstractBaseUser, PermissionsMixin, BaseUserManager
@@ -8,25 +6,24 @@ from django.utils import timezone
 
 
 class UserManager(BaseUserManager):
-    def create_user(self, username, phone_number, password=None, **extra_fields):
+    def create_user(self, username, email, password=None, **extra_fields):
         if not username:
             raise ValueError('Username is required')
-        if not phone_number:
-            raise ValueError('Phone number is required')
+        if not email:
+            raise ValueError('Email is required')
 
-        email = extra_fields.get('email', None)
+        email = self.normalize_email(email)
 
         user = self.model(
             username=username,
-            phone_number=phone_number,
-            email=self.normalize_email(email),
+            email=email,
             **extra_fields
         )
         user.set_password(password)
         user.save(using=self._db)
         return user
 
-    def create_superuser(self, username, phone_number, password=None, **extra_fields):
+    def create_superuser(self, username, email, password=None, **extra_fields):
         extra_fields.setdefault('is_staff', True)
         extra_fields.setdefault('is_superuser', True)
 
@@ -35,13 +32,12 @@ class UserManager(BaseUserManager):
         if extra_fields.get('is_superuser') is not True:
             raise ValueError('Superuser must have is_superuser=True.')
 
-        return self.create_user(username, phone_number, password, **extra_fields)
+        return self.create_user(username, email, password, **extra_fields)
 
 
 class User(AbstractBaseUser, PermissionsMixin):
     username = models.CharField(max_length=150, unique=True)
-    email = models.EmailField(blank=True, null=True)
-    phone_number = models.CharField(max_length=20, unique=True)
+    email = models.EmailField(unique=True)
 
     is_active = models.BooleanField(default=True)
     is_staff = models.BooleanField(default=False)
@@ -51,7 +47,7 @@ class User(AbstractBaseUser, PermissionsMixin):
     objects = UserManager()
 
     USERNAME_FIELD = 'username'
-    REQUIRED_FIELDS = ['phone_number']
+    REQUIRED_FIELDS = ['email']
 
     def __str__(self):
         return self.username
@@ -65,6 +61,10 @@ class Profile(models.Model):
 
     def __str__(self):
         return f"{self.user.username}"
+
+
+# اگر UserRequest دیگر مورد نیاز نیست، می‌توان آن را حذف کرد.
+# اما اگر همچنان نیاز دارید، اطمینان حاصل کنید که به User بدون phone_number مرتبط باشد.
 
 class UserRequest(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)

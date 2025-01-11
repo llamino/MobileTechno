@@ -76,46 +76,20 @@ paths:
   /messages/messages/:
     get:
       operationId: messages_messages_list
-      description: نمایش لیست پیام‌ها و ارسال پیام جدید.
-      parameters:
-      - name: page
-        in: query
-        description: A page number within the paginated result set.
-        required: false
-        type: integer
-      - name: page_size
-        in: query
-        description: Number of results to return per page.
-        required: false
-        type: integer
+      description: نمایش لیست پیام‌های ارسال شده و دریافت شده توسط کاربر فعلی.
+      parameters: []
       responses:
         '200':
           description: ''
           schema:
-            required:
-            - count
-            - results
-            type: object
-            properties:
-              count:
-                type: integer
-              next:
-                type: string
-                format: uri
-                x-nullable: true
-              previous:
-                type: string
-                format: uri
-                x-nullable: true
-              results:
-                type: array
-                items:
-                  $ref: '#/definitions/Message'
+            type: array
+            items:
+              $ref: '#/definitions/Message'
       tags:
       - messages
     post:
       operationId: messages_messages_create
-      description: نمایش لیست پیام‌ها و ارسال پیام جدید.
+      description: ارسال پیام جدید.
       parameters:
       - name: data
         in: body
@@ -127,47 +101,48 @@ paths:
           description: ''
           schema:
             $ref: '#/definitions/Message'
+        '400':
+          description: Bad Request
       tags:
       - messages
     parameters: []
-  /messages/messages/user/{username}/:
-    get:
-      operationId: messages_messages_user_read
-      description: نمایش پیام‌های ارسال شده و دریافت شده با یک کاربر مشخص.
+  /messages/messages/send/:
+    post:
+      operationId: messages_messages_send_create
+      description: ارسال پیام به کاربر مشخص شده.
       parameters:
-      - name: page
-        in: query
-        description: A page number within the paginated result set.
-        required: false
-        type: integer
-      - name: page_size
-        in: query
-        description: Number of results to return per page.
-        required: false
-        type: integer
+      - name: data
+        in: body
+        required: true
+        schema:
+          $ref: '#/definitions/Message'
       responses:
-        '200':
+        '201':
           description: ''
           schema:
-            required:
-            - count
-            - results
-            type: object
-            properties:
-              count:
-                type: integer
-              next:
-                type: string
-                format: uri
-                x-nullable: true
-              previous:
-                type: string
-                format: uri
-                x-nullable: true
-              results:
-                type: array
-                items:
-                  $ref: '#/definitions/Message'
+            $ref: '#/definitions/Message'
+        '400':
+          description: Bad Request
+        '404':
+          description: User not found.
+      tags:
+      - messages
+    parameters: []
+  /messages/messages/user/{username}/delete_all/:
+    delete:
+      operationId: messages_messages_user_delete_all_delete
+      description: حذف همه پیام‌های بین شما و کاربر مشخص شده.
+      parameters:
+      - name: username
+        in: path
+        description: نام کاربری کاربر مورد نظر
+        type: string
+        required: true
+      responses:
+        '204':
+          description: No Content
+        '404':
+          description: User not found.
       tags:
       - messages
     parameters:
@@ -175,33 +150,110 @@ paths:
       in: path
       required: true
       type: string
+  /messages/messages/user/{username}/delete_sent/:
+    delete:
+      operationId: messages_messages_user_delete_sent_delete
+      description: حذف پیام‌هایی که توسط شما به کاربر مشخص شده ارسال شده‌اند.
+      parameters:
+      - name: username
+        in: path
+        description: نام کاربری کاربر مورد نظر
+        type: string
+        required: true
+      responses:
+        '204':
+          description: No Content
+        '404':
+          description: User not found.
+      tags:
+      - messages
+    parameters:
+    - name: username
+      in: path
+      required: true
+      type: string
+  /messages/messages/user/{username}/history/:
+    get:
+      operationId: messages_messages_user_history_list
+      description: نمایش تاریخچه پیام‌ها با کاربر مشخص شده.
+      parameters:
+      - name: username
+        in: path
+        description: نام کاربری کاربر مورد نظر
+        type: string
+        required: true
+      responses:
+        '200':
+          description: ''
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/Message'
+        '404':
+          description: User not found.
+      tags:
+      - messages
+    parameters:
+    - name: username
+      in: path
+      required: true
+      type: string
+  /messages/messages/users/:
+    get:
+      operationId: messages_messages_users_list
+      description: لیست کردن همه کاربران که با آنها پیام داده یا دریافت کرده‌اید.
+      parameters: []
+      responses:
+        '200':
+          description: ''
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/User'
+      tags:
+      - messages
+    parameters: []
   /messages/messages/{id}/:
     get:
       operationId: messages_messages_read
-      description: مشاهده جزئیات یک پیام خاص.
+      description: مشاهده جزئیات یک پیام خاص و علامت‌گذاری آن به عنوان خوانده شده.
       parameters: []
       responses:
         '200':
           description: ''
           schema:
             $ref: '#/definitions/Message'
+        '404':
+          description: Not found.
+      tags:
+      - messages
+    delete:
+      operationId: messages_messages_delete
+      description: حذف یک پیام خاص که توسط شما ارسال شده است.
+      parameters: []
+      responses:
+        '204':
+          description: No Content
+        '403':
+          description: Forbidden
+        '404':
+          description: Not found.
       tags:
       - messages
     parameters:
     - name: id
       in: path
-      description: A unique integer value identifying this message.
       required: true
-      type: integer
+      type: string
 definitions:
   CustomTokenObtainPair:
     required:
-    - username_or_phone
+    - username_or_email
     - password
     type: object
     properties:
-      username_or_phone:
-        title: Username or phone
+      username_or_email:
+        title: Username or email
         type: string
         minLength: 1
       password:
@@ -209,21 +261,18 @@ definitions:
         type: string
         minLength: 1
   Profile:
-    required:
-    - first_name
-    - last_name
     type: object
     properties:
       first_name:
         title: First name
         type: string
         maxLength: 30
-        minLength: 1
+        x-nullable: true
       last_name:
         title: Last name
         type: string
         maxLength: 30
-        minLength: 1
+        x-nullable: true
       photo:
         title: Photo
         type: string
@@ -233,20 +282,15 @@ definitions:
   Register:
     required:
     - username
-    - phone_number
     - password
     - profile
+    - email
     type: object
     properties:
       username:
         title: Username
         type: string
         maxLength: 150
-        minLength: 1
-      phone_number:
-        title: Phone number
-        type: string
-        maxLength: 20
         minLength: 1
       password:
         title: Password
@@ -260,7 +304,7 @@ definitions:
         type: string
         format: email
         maxLength: 254
-        x-nullable: true
+        minLength: 1
   TokenRefresh:
     required:
     - refresh
@@ -303,9 +347,11 @@ definitions:
         $ref: '#/definitions/User'
       recipient:
         title: Recipient
+        description: نام کاربری دریافت‌کننده پیام
         type: string
       content:
         title: Content
+        description: متن پیام
         type: string
         minLength: 1
       timestamp:

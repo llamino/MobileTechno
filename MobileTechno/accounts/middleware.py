@@ -1,5 +1,4 @@
 # accounts/middleware.py
-
 from django.utils.deprecation import MiddlewareMixin
 from rest_framework_simplejwt.backends import TokenBackend
 from django.conf import settings
@@ -9,6 +8,9 @@ from django.contrib.auth.models import AnonymousUser
 User = get_user_model()
 
 class JWTAuthenticationMiddleware(MiddlewareMixin):
+    """
+    میان‌افزار برای احراز هویت کاربران با استفاده از توکن‌های JWT ذخیره‌شده در کوکی‌ها.
+    """
     def process_request(self, request):
         token = request.COOKIES.get('access_token')
 
