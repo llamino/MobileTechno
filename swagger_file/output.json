@@ -1,7 +1,7 @@
 swagger: '2.0'
 info:
-  title: Your API Title
-  description: API description
+  title: Amin Ahmadi
+  description: swagger for MobileTechno
   version: v1
 host: 127.0.0.1:8000
 schemes:
@@ -12,15 +12,18 @@ consumes:
 produces:
 - application/json
 securityDefinitions:
-  Basic:
-    type: basic
+  Bearer:
+    type: apiKey
+    name: Authorization
+    in: header
+    description: لطفاً توکن JWT خود را با پیشوند `Bearer ` وارد کنید.
 security:
-- Basic: []
+- Bearer: []
 paths:
   /accounts/api/login/:
     post:
       operationId: accounts_api_login_create
-      description: ''
+      description: دریافت توکن JWT با وارد کردن نام کاربری/ایمیل و رمز عبور.
       parameters:
       - name: data
         in: body
@@ -28,17 +31,31 @@ paths:
         schema:
           $ref: '#/definitions/CustomTokenObtainPair'
       responses:
-        '201':
-          description: ''
+        '200':
+          description: توکن‌های JWT
           schema:
-            $ref: '#/definitions/CustomTokenObtainPair'
+            type: object
+            properties:
+              refresh:
+                type: string
+              access:
+                type: string
+              user:
+                type: object
+                properties:
+                  id:
+                    type: integer
+                  username:
+                    type: string
+                  email:
+                    type: string
       tags:
       - accounts
     parameters: []
   /accounts/api/register/:
     post:
       operationId: accounts_api_register_create
-      description: ''
+      description: ثبت‌نام کاربر جدید.
       parameters:
       - name: data
         in: body
@@ -73,64 +90,28 @@ paths:
       tags:
       - accounts
     parameters: []
-  /messages/messages/:
-    get:
-      operationId: messages_messages_list
-      description: نمایش لیست پیام‌های ارسال شده و دریافت شده توسط کاربر فعلی.
+  /messages/delete_message/{id}/:
+    delete:
+      operationId: messages_delete_message_delete
+      description: حذف یک پیام خاص که توسط شما ارسال شده است.
       parameters: []
       responses:
-        '200':
-          description: ''
-          schema:
-            type: array
-            items:
-              $ref: '#/definitions/Message'
-      tags:
-      - messages
-    post:
-      operationId: messages_messages_create
-      description: ارسال پیام جدید.
-      parameters:
-      - name: data
-        in: body
-        required: true
-        schema:
-          $ref: '#/definitions/Message'
-      responses:
-        '201':
-          description: ''
-          schema:
-            $ref: '#/definitions/Message'
-        '400':
-          description: Bad Request
-      tags:
-      - messages
-    parameters: []
-  /messages/messages/send/:
-    post:
-      operationId: messages_messages_send_create
-      description: ارسال پیام به کاربر مشخص شده.
-      parameters:
-      - name: data
-        in: body
-        required: true
-        schema:
-          $ref: '#/definitions/Message'
-      responses:
-        '201':
-          description: ''
-          schema:
-            $ref: '#/definitions/Message'
-        '400':
-          description: Bad Request
+        '204':
+          description: No Content
+        '403':
+          description: Forbidden
         '404':
-          description: User not found.
+          description: Not found.
       tags:
       - messages
-    parameters: []
-  /messages/messages/user/{username}/delete_all/:
+    parameters:
+    - name: id
+      in: path
+      required: true
+      type: string
+  /messages/delete_message_all/{username}/:
     delete:
-      operationId: messages_messages_user_delete_all_delete
+      operationId: messages_delete_message_all_delete
       description: حذف همه پیام‌های بین شما و کاربر مشخص شده.
       parameters:
       - name: username
@@ -150,9 +131,9 @@ paths:
       in: path
       required: true
       type: string
-  /messages/messages/user/{username}/delete_sent/:
+  /messages/delete_messages_sent/{username}/:
     delete:
-      operationId: messages_messages_user_delete_sent_delete
+      operationId: messages_delete_messages_sent_delete
       description: حذف پیام‌هایی که توسط شما به کاربر مشخص شده ارسال شده‌اند.
       parameters:
       - name: username
@@ -172,9 +153,28 @@ paths:
       in: path
       required: true
       type: string
-  /messages/messages/user/{username}/history/:
+  /messages/detail_message/{id}/:
     get:
-      operationId: messages_messages_user_history_list
+      operationId: messages_detail_message_read
+      description: مشاهده جزئیات یک پیام خاص و علامت‌گذاری آن به عنوان خوانده شده.
+      parameters: []
+      responses:
+        '200':
+          description: ''
+          schema:
+            $ref: '#/definitions/Message'
+        '404':
+          description: Not found.
+      tags:
+      - messages
+    parameters:
+    - name: id
+      in: path
+      required: true
+      type: string
+  /messages/history/{username}/:
+    get:
+      operationId: messages_history_read
       description: نمایش تاریخچه پیام‌ها با کاربر مشخص شده.
       parameters:
       - name: username
@@ -198,9 +198,24 @@ paths:
       in: path
       required: true
       type: string
-  /messages/messages/users/:
+  /messages/list_messages/:
     get:
-      operationId: messages_messages_users_list
+      operationId: messages_list_messages_list
+      description: نمایش لیست پیام‌های ارسال شده و دریافت شده توسط کاربر فعلی.
+      parameters: []
+      responses:
+        '200':
+          description: ''
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/Message'
+      tags:
+      - messages
+    parameters: []
+  /messages/list_users/:
+    get:
+      operationId: messages_list_users_list
       description: لیست کردن همه کاربران که با آنها پیام داده یا دریافت کرده‌اید.
       parameters: []
       responses:
@@ -213,38 +228,103 @@ paths:
       tags:
       - messages
     parameters: []
-  /messages/messages/{id}/:
-    get:
-      operationId: messages_messages_read
-      description: مشاهده جزئیات یک پیام خاص و علامت‌گذاری آن به عنوان خوانده شده.
-      parameters: []
+  /messages/send_message/:
+    post:
+      operationId: messages_send_message_create
+      description: ارسال پیام به کاربر مشخص شده.
+      parameters:
+      - name: data
+        in: body
+        required: true
+        schema:
+          $ref: '#/definitions/Message'
       responses:
-        '200':
+        '201':
           description: ''
           schema:
             $ref: '#/definitions/Message'
+        '400':
+          description: Bad Request
         '404':
-          description: Not found.
+          description: User not found.
       tags:
       - messages
-    delete:
-      operationId: messages_messages_delete
-      description: حذف یک پیام خاص که توسط شما ارسال شده است.
-      parameters: []
+    parameters: []
+  /mobile/mobile_detail/{product_id}/:
+    get:
+      operationId: mobile_mobile_detail_read
+      description: Retrieve details of a mobile by product ID.
+      parameters:
+      - name: product_id
+        in: path
+        description: Product ID of the mobile
+        type: string
+        required: true
       responses:
-        '204':
-          description: No Content
-        '403':
-          description: Forbidden
-        '404':
-          description: Not found.
+        '200':
+          description: ''
       tags:
-      - messages
+      - mobile
     parameters:
-    - name: id
+    - name: product_id
       in: path
       required: true
       type: string
+  /mobile/mobile_list/:
+    get:
+      operationId: mobile_mobile_list_list
+      description: Retrieve a list of all mobiles with name, price, and image.
+      parameters:
+      - name: page
+        in: query
+        description: Page number
+        type: integer
+      - name: page_size
+        in: query
+        description: Number of items per page
+        type: integer
+      responses:
+        '200':
+          description: ''
+      tags:
+      - mobile
+    parameters: []
+  /mobile/mobile_suggested/:
+    get:
+      operationId: mobile_mobile_suggested_list
+      description: Get suggested mobiles based on price range and added time. Rate
+        limited based on user authentication.
+      parameters:
+      - name: price__gte
+        in: query
+        description: Minimum price
+        type: number
+      - name: price__lte
+        in: query
+        description: Maximum price
+        type: number
+      - name: added_time__gte
+        in: query
+        description: Added after date (YYYY-MM-DD)
+        type: string
+      - name: added_time__lte
+        in: query
+        description: Added before date (YYYY-MM-DD)
+        type: string
+      - name: page
+        in: query
+        description: Page number
+        type: integer
+      - name: page_size
+        in: query
+        description: Number of items per page
+        type: integer
+      responses:
+        '200':
+          description: ''
+      tags:
+      - mobile
+    parameters: []
 definitions:
   CustomTokenObtainPair:
     required:
@@ -282,15 +362,21 @@ definitions:
   Register:
     required:
     - username
+    - email
     - password
     - profile
-    - email
     type: object
     properties:
       username:
         title: Username
         type: string
         maxLength: 150
+        minLength: 1
+      email:
+        title: Email
+        type: string
+        format: email
+        maxLength: 254
         minLength: 1
       password:
         title: Password
@@ -299,12 +385,6 @@ definitions:
         minLength: 1
       profile:
         $ref: '#/definitions/Profile'
-      email:
-        title: Email
-        type: string
-        format: email
-        maxLength: 254
-        minLength: 1
   TokenRefresh:
     required:
     - refresh
