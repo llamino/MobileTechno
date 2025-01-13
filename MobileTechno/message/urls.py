@@ -7,15 +7,17 @@ from .views import (
     MessageListAPIView,
     MessageDetailAPIView,
     DeleteSentMessagesAPIView,
-    DeleteAllMessagesAPIView
+    DeleteAllMessagesAPIView,
+    DeleteMessageAPIView
 )
 
 urlpatterns = [
-    path('messages/users/', ListUsersAPIView.as_view(), name='list-users'),
-    path('messages/user/<str:username>/history/', UserMessageHistoryAPIView.as_view(), name='user-message-history'),
-    path('messages/send/', SendMessageAPIView.as_view(), name='send-message'),
-    path('messages/', MessageListAPIView.as_view(), name='message-list'),
-    path('messages/<int:pk>/', MessageDetailAPIView.as_view(), name='message-detail'),
-    path('messages/user/<str:username>/delete_sent/', DeleteSentMessagesAPIView.as_view(), name='delete-sent-messages'),
-    path('messages/user/<str:username>/delete_all/', DeleteAllMessagesAPIView.as_view(), name='delete-all-messages'),
+    path('list_users/', ListUsersAPIView.as_view(), name='list-users'),
+    path('history/<str:username>/', UserMessageHistoryAPIView.as_view(), name='user-message-history'),
+    path('send_message/', SendMessageAPIView.as_view(), name='send-message'),
+    path('list_messages/', MessageListAPIView.as_view(), name='message-list'),
+    path('detail_message/<int:pk>/', MessageDetailAPIView.as_view(), name='message-detail'),
+    path('delete_message/<int:pk>/', DeleteMessageAPIView.as_view(), name='delete-message'),
+    path('delete_messages_sent/<str:username>/', DeleteSentMessagesAPIView.as_view(), name='delete-sent-messages'),
+    path('delete_message_all/<str:username>/', DeleteAllMessagesAPIView.as_view(), name='delete-all-messages'),
 ]

@@ -18,7 +18,7 @@ from django.views import View
 from drf_yasg.utils import swagger_auto_schema
 from drf_yasg import openapi
 
-# API Views
+# API Views --------------------------------------------
 
 class RegisterAPIView(generics.CreateAPIView):
     """
@@ -64,7 +64,10 @@ class CustomTokenObtainPairView(TokenObtainPairView):
     def post(self, request, *args, **kwargs):
         return super().post(request, *args, **kwargs)
 
-# Web Views
+
+
+
+# Web Views ------------------------------------------
 
 
 
@@ -105,6 +108,8 @@ class RegisterView(FormView):
     def form_invalid(self, form):
         messages.error(self.request, 'لطفاً خطاهای فرم را بررسی کنید.')
         return super().form_invalid(form)
+
+
 class CustomLoginView(FormView):
     """
     نما برای ورود کاربر.

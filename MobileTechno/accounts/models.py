@@ -1,3 +1,4 @@
+# accounts/models.py
 from django.db import models
 from django.contrib.auth.models import (
     AbstractBaseUser, PermissionsMixin, BaseUserManager
@@ -52,6 +53,25 @@ class User(AbstractBaseUser, PermissionsMixin):
     def __str__(self):
         return self.username
 
+class UserRequest(models.Model):
+    """
+    Model to track the number of requests a user has made in a day.
+    """
+    user = models.OneToOneField(User, on_delete=models.CASCADE)
+    requests_today = models.IntegerField(default=0)
+    last_request = models.DateTimeField(default=timezone.now)
+
+    def reset_requests_if_needed(self):
+        """
+        Reset the request count if a new day has started.
+        """
+        if timezone.now().date() != self.last_request.date():
+            self.requests_today = 0
+            self.last_request = timezone.now()
+            self.save()
+
+    def __str__(self):
+        return f"{self.user.username} - {self.requests_today} requests today"
 
 class Profile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='profile')
@@ -66,13 +86,3 @@ class Profile(models.Model):
 # اگر UserRequest دیگر مورد نیاز نیست، می‌توان آن را حذف کرد.
 # اما اگر همچنان نیاز دارید، اطمینان حاصل کنید که به User بدون phone_number مرتبط باشد.
 
-class UserRequest(models.Model):
-    user = models.OneToOneField(User, on_delete=models.CASCADE)
-    requests_today = models.IntegerField(default=0)
-    last_request = models.DateTimeField(default=timezone.now)
-
-    def reset_requests_if_needed(self):
-        if timezone.now().date() != self.last_request.date():
-            self.requests_today = 0
-            self.last_request = timezone.now()
-            self.save()

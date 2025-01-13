@@ -3,12 +3,14 @@ from rest_framework.views import APIView
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework import status
-from .models import Message, User
+from .models import Message
+from accounts.models import User
 from .serializers import MessageSerializer, UserSerializer
 from django.db import models
 from drf_yasg.utils import swagger_auto_schema
 from drf_yasg import openapi
 from .pagination import MessagingPagination
+
 
 class ListUsersAPIView(APIView):
     """
@@ -24,12 +26,19 @@ class ListUsersAPIView(APIView):
         """
         دریافت لیست کاربران مرتبط.
         """
-        sent_users = User.objects.filter(sent_messages__sender=request.user).distinct()
-        received_users = User.objects.filter(received_messages__recipient=request.user).distinct()
-        users = (sent_users | received_users).distinct()
-        serializer = UserSerializer(users, many=True)
-        return Response(serializer.data, status=status.HTTP_200_OK)
+        user = request.user
 
+        # کاربران به که پیام ارسال کرده‌اید (یعنی کاربران که پیام‌های شما به آنها ارسال شده)
+        sent_users = User.objects.filter(received_messages__sender=user)
+
+        # کاربرانی که از آنها پیام دریافت کرده‌اید (یعنی کاربران که به شما پیام ارسال کرده‌اند)
+        received_users = User.objects.filter(sent_messages__recipient=user)
+
+        # ترکیب دو کوئری و حذف کاربر فعلی
+        users = (sent_users | received_users).exclude(id=user.id).distinct()
+
+        serializer = UserSerializer(users, many=True)
+        return Response(serializer.data, status=200)
 
 class UserMessageHistoryAPIView(APIView):
     """
@@ -75,19 +84,11 @@ class UserMessageHistoryAPIView(APIView):
 
 
 class SendMessageAPIView(APIView):
-    serializer_class = MessageSerializer
     """
     APIView برای ارسال پیام به یک کاربر مشخص.
     """
     permission_classes = [IsAuthenticated]
-
-
-    authorization_header = openapi.Parameter(
-        'Authorization',
-        openapi.IN_HEADER,
-        description="توکن JWT با پیشوند Bearer",
-        type=openapi.TYPE_STRING,
-    )
+    serializer_class = MessageSerializer
 
     @swagger_auto_schema(
         operation_description="ارسال پیام به کاربر مشخص شده.",
@@ -96,22 +97,21 @@ class SendMessageAPIView(APIView):
             201: MessageSerializer(),
             400: 'Bad Request',
             404: 'User not found.'
-        },
-        manual_parameters=[authorization_header])
+        },)
+        # manual_parameters=[authorization_header])
 
     def post(self, request):
         """
         ارسال پیام.
         """
-        serializer = self.serializer_class(data=request.data)
-        if not serializer.is_valid():
-            recipient_username = serializer.validated_data.get('recipient').username
-            if recipient_username == request.user.username:
+        serializer = self.serializer_class(data=request.data, context={'request': request})
+        if serializer.is_valid():
+            recipient = serializer.validated_data.get('recipient')
+            if recipient.username == request.user.username:
                 return Response({'detail': 'Cannot send message to yourself.'}, status=status.HTTP_400_BAD_REQUEST)
             serializer.save(sender=request.user)
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
 class MessageListAPIView(APIView):
     """
     APIView برای نمایش لیست پیام‌های کاربر فعلی.
@@ -136,26 +136,6 @@ class MessageListAPIView(APIView):
         serializer = MessageSerializer(page, many=True)
         return paginator.get_paginated_response(serializer.data)
 
-    @swagger_auto_schema(
-        operation_description="ارسال پیام جدید.",
-        request_body=MessageSerializer,
-        responses={
-            201: MessageSerializer(),
-            400: 'Bad Request'
-        }
-    )
-    def post(self, request):
-        """
-        ارسال پیام جدید.
-        """
-        serializer = MessageSerializer(data=request.data)
-        if serializer.is_valid():
-            recipient_username = serializer.validated_data.get('recipient').username
-            if recipient_username == request.user.username:
-                return Response({'detail': 'Cannot send message to yourself.'}, status=status.HTTP_400_BAD_REQUEST)
-            serializer.save(sender=request.user)
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 class MessageDetailAPIView(APIView):
@@ -191,28 +171,6 @@ class MessageDetailAPIView(APIView):
         serializer = MessageSerializer(message)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
-    @swagger_auto_schema(
-        operation_description="حذف یک پیام خاص که توسط شما ارسال شده است.",
-        responses={
-            204: 'No Content',
-            403: 'Forbidden',
-            404: 'Not found.'
-        }
-    )
-    def delete(self, request, pk):
-        """
-        حذف پیام.
-        """
-        try:
-            message = Message.objects.get(pk=pk)
-        except Message.DoesNotExist:
-            return Response({'detail': 'Not found.'}, status=status.HTTP_404_NOT_FOUND)
-
-        if message.sender != request.user:
-            return Response({'detail': 'Forbidden.'}, status=status.HTTP_403_FORBIDDEN)
-
-        message.delete()
-        return Response(status=status.HTTP_204_NO_CONTENT)
 
 
 class DeleteSentMessagesAPIView(APIView):
@@ -284,3 +242,33 @@ class DeleteAllMessagesAPIView(APIView):
             models.Q(sender=other_user, recipient=request.user)
         ).delete()
         return Response({'detail': f'Deleted {deleted_count} messages with {username}.'}, status=status.HTTP_204_NO_CONTENT)
+
+
+class DeleteMessageAPIView(APIView):
+    """
+    حذف یک پیام مشخص
+    """
+    permission_classes = [IsAuthenticated]
+
+    @swagger_auto_schema(
+        operation_description="حذف یک پیام خاص که توسط شما ارسال شده است.",
+        responses={
+            204: 'No Content',
+            403: 'Forbidden',
+            404: 'Not found.'
+        }
+    )
+    def delete(self, request, pk):
+        """
+        حذف پیام.
+        """
+        try:
+            message = Message.objects.get(pk=pk)
+        except Message.DoesNotExist:
+            return Response({'detail': 'Not found.'}, status=status.HTTP_404_NOT_FOUND)
+
+        if message.sender != request.user:
+            return Response({'detail': 'Forbidden.'}, status=status.HTTP_403_FORBIDDEN)
+
+        message.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)

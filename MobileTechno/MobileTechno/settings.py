@@ -60,7 +60,8 @@ INSTALLED_APPS = [
     'rest_framework',
     'django_filters',
     'django_render_partial',
-    'drf_yasg'
+    'drf_yasg',
+    'django_celery_beat',
 ]
 
 MIDDLEWARE = [
@@ -187,6 +188,36 @@ AUTHENTICATION_BACKENDS = [
     'accounts.backends.UsernameOrEmailBackend',
     'django.contrib.auth.backends.ModelBackend',  # بک‌اند پیش‌فرض Django
 ]
+# mobile_project/settings.py
+SESSION_ENGINE = 'django.contrib.sessions.backends.db'  # Default
+
+
+
+# ... existing settings ...
+
+from celery.schedules import crontab
+
+
+# تنظیمات Celery
+CELERY_BROKER_URL = config('CELERY_BROKER_URL')
+CELERY_RESULT_BACKEND = 'rpc://'  # ذخیره نتایج در RabbitMQ
+CELERY_ACCEPT_CONTENT = ['json']
+CELERY_TASK_SERIALIZER = 'json'
+CELERY_RESULT_SERIALIZER = 'json'
+CELERY_TIMEZONE = 'Asia/Tehran'  # تنظیم منطقه زمانی
+
+
+CELERY_BEAT_SCHEDULE = {
+    'daily_scrape_mobiles': {
+        'task': 'mobile.tasks.scrape_and_update_mobiles',
+        'schedule': crontab(hour=0, minute=0),  # Executes daily at midnight UTC
+        # You can adjust 'hour' and 'minute' based on your timezone
+    },
+
+}
+
+# فعال‌سازی Celery Beat
+CELERY_BEAT_SCHEDULER = 'django_celery_beat.schedulers:DatabaseScheduler'
 
 
 

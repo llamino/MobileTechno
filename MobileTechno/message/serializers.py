@@ -1,6 +1,7 @@
 # message/serializers.py
 from rest_framework import serializers
-from .models import User, Message
+from .models import  Message
+from accounts.models import User
 
 class UserSerializer(serializers.ModelSerializer):
     """

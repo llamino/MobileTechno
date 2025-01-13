@@ -4,5 +4,5 @@ from .models import Mobile
 
 @admin.register(Mobile)
 class MobileAdmin(admin.ModelAdmin):
-    list_display = ('name', 'url', 'added_time')
+    list_display = ('name', 'image_url', 'added_time')
     search_fields = ('name',)
